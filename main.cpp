@@ -136,6 +136,48 @@ void MergeSort(vector<T>& arr)
         MergeSortRecursive(arr, 0, static_cast<int>(arr.size()) - 1);
 }
 
+template<typename T>
+void bubbleSort(vector<T>& arr) {
+    size_t n = arr.size();
+    if (n <= 1) return;
+    
+    for (size_t i = 0; i < n - 1; ++i) {
+        bool swapped = false;
+        // Last i elements are already in place
+        for (size_t j = 0; j < n - i - 1; ++j) {
+            // Requires operator> for comparison
+            if (arr[j] > arr[j + 1]) {
+                swap(arr[j], arr[j + 1]);
+                swapped = true;
+            }
+        }
+        // If no swaps occurred - array is sorted
+        if (!swapped) break;
+    }
+}
+
+
+template<typename T>
+void selectionSort(vector<T>& arr) {
+    size_t n = arr.size();
+    if (n <= 1) return;
+    
+    for (size_t i = 0; i < n - 1; ++i) {
+        size_t minIndex = i;
+        // Find minimum element in unsorted part
+        for (size_t j = i + 1; j < n; ++j) {
+            // Requires operator< for comparison
+            if (arr[j] < arr[minIndex]) {
+                minIndex = j;
+            }
+        }
+        // Swap if a smaller element was found
+        if (minIndex != i) {
+            swap(arr[i], arr[minIndex]);
+        }
+    }
+}
+
 int main()
 {
     const int N = 100000;  // размер массива
