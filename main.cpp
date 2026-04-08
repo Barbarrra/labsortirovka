@@ -29,7 +29,32 @@ int LinearSearch(const vector<int>& arr, int value)
     return -1; // не нашли
 }
 
-//место для сортировок
+/*  Быстрая сортировка (Quick Sort), шаблонная функция (по пункту 3)
+    Операции, необходимые для сортировки:
+    1. Сравнение (operator< (arr[i] < pivot)) — определяет порядок элементов
+    2. Обмен (swap(arr[i], arr[j])) — перемещает элементы на нужные позиции
+    */
+template<typename T>
+void QuickSort(vector<T>& arr, int left, int right)
+{
+    if (left >= right) return;
+    T pivot = arr[(left + right) / 2];
+    int i = left, j = right;
+    while (i <= j)
+    {
+        while (arr[i] < pivot) i++;
+        while (arr[j] > pivot) j--;
+
+        if (i <= j)
+        {
+            swap(arr[i], arr[j]);
+            i++;
+            j--;
+        }
+    }
+    QuickSort(arr, left, j);
+    QuickSort(arr, i, right);
+}
 
 // Insertion Sort
 template <typename T>
@@ -56,10 +81,10 @@ void Merge(vector<T>& arr, int left, int mid, int right)
 {
     vector<T> leftArr(arr.begin() + left, arr.begin() + mid + 1);
     vector<T> rightArr(arr.begin() + mid + 1, arr.begin() + right + 1);
-    
+
     int i = 0, j = 0, k = left;
-    
-    // Сравнение элементов и копирование меньшего 
+
+    // Сравнение элементов и копирование меньшего
     while (i < leftArr.size() && j < rightArr.size())
     {
         if (leftArr[i] <= rightArr[j])  // сравнение
