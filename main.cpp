@@ -6,66 +6,95 @@
 
 using namespace std;
 
-// генерация случайного числа от min до max
+// Генерация случайного числа в диапазоне [min, max]
 int GetRandomInt(int min, int max)
 {
-    // инициализация генератора (по примеру с лекции)
     auto seed = chrono::system_clock::now().time_since_epoch().count();
     static mt19937 RandomGenerator(seed);
     uniform_int_distribution<int> dist(min, max);
     return dist(RandomGenerator);
 }
 
-// линейный поиск - просто пробегаем по всем элементам
+// Линейный поиск: возвращает индекс или -1, если не найдено
 int LinearSearch(const vector<int>& arr, int value)
 {
-    for (int i = 0; i < arr.size(); i++)
-    {
-        if (arr[i] == value)
-        {
-            return i; // если совпали(нашли), то вернули индекс
-        }
-    }
-    return -1; // не нашли
-}
-
-// Бинарный поиск (пункт 4), шаблонная версия
-template<typename T>
-int BinarySearch(const vector<T>& arr, const T& value)
-{
-    int left = 0;
-    int right = static_cast<int>(arr.size()) - 1;
-
-    while (left <= right)
-    {
-        int mid = left + (right - left) / 2;
-
-        if (arr[mid] == value)
-            return mid;
-        else if (arr[mid] < value)
-            left = mid + 1;
-        else
-            right = mid - 1;
-    }
+    for (size_t i = 0; i < arr.size(); i++)
+        if (arr[i] == value) return static_cast<int>(i);
     return -1;
 }
 
-/*  Быстрая сортировка (Quick Sort), шаблонная функция (по пункту 3)
-    Операции, необходимые для сортировки:
-    1. Сравнение (operator< (arr[i] < pivot)) — определяет порядок элементов
-    2. Обмен (swap(arr[i], arr[j])) — перемещает элементы на нужные позиции
-    */
-template<typename T>
+// ============================================================================
+// 1. INSERTION SORT (твоя реализация)
+// Операции: сравнение (operator>) и присваивание (=) для сдвига и вставки
+// ============================================================================
+template <typename T>
+void InsertionSort(vector<T>& arr)
+{
+    for (size_t i = 1; i < arr.size(); ++i)
+    {
+        T key = arr[i];
+        int j = static_cast<int>(i) - 1;
+        while (j >= 0 && arr[j] > key)
+        {
+            arr[j + 1] = arr[j];
+            --j;
+        }
+        arr[j + 1] = key;
+    }
+}
+
+// ============================================================================
+// 2. MERGE SORT (твоя реализация)
+// Операции: сравнение (operator<=) и присваивание (=) при слиянии частей
+// ============================================================================
+template <typename T>
+void Merge(vector<T>& arr, int left, int mid, int right)
+{
+    vector<T> L(arr.begin() + left, arr.begin() + mid + 1);
+    vector<T> R(arr.begin() + mid + 1, arr.begin() + right + 1);
+    
+    int i = 0, j = 0, k = left;
+    while (i < (int)L.size() && j < (int)R.size())
+    {
+        if (L[i] <= R[j]) arr[k++] = L[i++];
+        else arr[k++] = R[j++];
+    }
+    while (i < (int)L.size()) arr[k++] = L[i++];
+    while (j < (int)R.size()) arr[k++] = R[j++];
+}
+
+template <typename T>
+void MergeSortRecursive(vector<T>& arr, int left, int right)
+{
+    if (left >= right) return;
+    int mid = left + (right - left) / 2;
+    MergeSortRecursive(arr, left, mid);
+    MergeSortRecursive(arr, mid + 1, right);
+    Merge(arr, left, mid, right);
+}
+
+template <typename T>
+void MergeSort(vector<T>& arr)
+{
+    if (!arr.empty())
+        MergeSortRecursive(arr, 0, static_cast<int>(arr.size()) - 1);
+}
+
+// ============================================================================
+// 3. QUICK SORT
+// Операции: сравнение (operator<, operator>) и обмен (swap) элементов
+// ============================================================================
+template <typename T>
 void QuickSort(vector<T>& arr, int left, int right)
 {
     if (left >= right) return;
     T pivot = arr[(left + right) / 2];
     int i = left, j = right;
+    
     while (i <= j)
     {
         while (arr[i] < pivot) i++;
         while (arr[j] > pivot) j--;
-
         if (i <= j)
         {
             swap(arr[i], arr[j]);
@@ -77,266 +106,179 @@ void QuickSort(vector<T>& arr, int left, int right)
     QuickSort(arr, i, right);
 }
 
-// Insertion Sort
+// ============================================================================
+// 4. BUBBLE SORT
+// Операции: сравнение (operator>) и обмен (swap) соседних элементов
+// ============================================================================
 template <typename T>
-void InsertionSort(vector<T>& arr)
+void BubbleSort(vector<T>& arr)
 {
-    // Операции: сравнение (operator>) и присваивание для сдвига элементов
-    for (size_t i = 1; i < arr.size(); ++i)
-    {
-        T key = arr[i];
-        int j = static_cast<int>(i) - 1;
-        while (j >= 0 && arr[j] > key)  // сравнение
-        {
-            arr[j + 1] = arr[j];  // сдвиг вправо (присваивание)
-            --j;
-        }
-        arr[j + 1] = key;  // вставка на место (присваивание)
-    }
-}
-
-
-// слияние двух отсортированных частей (для Merge Sort)
-template <typename T>
-void Merge(vector<T>& arr, int left, int mid, int right)
-{
-    vector<T> leftArr(arr.begin() + left, arr.begin() + mid + 1);
-    vector<T> rightArr(arr.begin() + mid + 1, arr.begin() + right + 1);
-
-    int i = 0, j = 0, k = left;
-
-    // Сравнение элементов и копирование меньшего
-    while (i < leftArr.size() && j < rightArr.size())
-    {
-        if (leftArr[i] <= rightArr[j])  // сравнение
-            arr[k++] = leftArr[i++];     // копирование
-        else
-            arr[k++] = rightArr[j++];
-    }
-    // Копирование остатков
-    while (i < leftArr.size()) arr[k++] = leftArr[i++];
-    while (j < rightArr.size()) arr[k++] = rightArr[j++];
-}
-
-template <typename T>
-void MergeSortRecursive(vector<T>& arr, int left, int right)
-{
-    if (left >= right) return;
-    int mid = left + (right - left) / 2;
-    MergeSortRecursive(arr, left, mid);
-    MergeSortRecursive(arr, mid + 1, right);
-    Merge(arr, left, mid, right);  // слияние с операциями сравнения и копирования
-}
-
-// Merge Sort
-template <typename T>
-void MergeSort(vector<T>& arr)
-{
-    if (!arr.empty())
-        MergeSortRecursive(arr, 0, static_cast<int>(arr.size()) - 1);
-}
-
-template<typename T>
-void bubbleSort(vector<T>& arr) {
     size_t n = arr.size();
-    if (n <= 1) return;
-    
-    for (size_t i = 0; i < n - 1; ++i) {
+    for (size_t i = 0; i < n - 1; ++i)
+    {
         bool swapped = false;
-        // Last i elements are already in place
-        for (size_t j = 0; j < n - i - 1; ++j) {
-            // Requires operator> for comparison
-            if (arr[j] > arr[j + 1]) {
+        for (size_t j = 0; j < n - i - 1; ++j)
+        {
+            if (arr[j] > arr[j + 1])
+            {
                 swap(arr[j], arr[j + 1]);
                 swapped = true;
             }
         }
-        // If no swaps occurred - array is sorted
         if (!swapped) break;
     }
 }
 
-
-template<typename T>
-void selectionSort(vector<T>& arr) {
+// ============================================================================
+// 5. SELECTION SORT
+// Операции: сравнение (operator<) для поиска минимума и обмен (swap)
+// ============================================================================
+template <typename T>
+void SelectionSort(vector<T>& arr)
+{
     size_t n = arr.size();
-    if (n <= 1) return;
-    
-    for (size_t i = 0; i < n - 1; ++i) {
-        size_t minIndex = i;
-        // Find minimum element in unsorted part
-        for (size_t j = i + 1; j < n; ++j) {
-            // Requires operator< for comparison
-            if (arr[j] < arr[minIndex]) {
-                minIndex = j;
-            }
+    for (size_t i = 0; i < n - 1; ++i)
+    {
+        size_t minIdx = i;
+        for (size_t j = i + 1; j < n; ++j)
+        {
+            if (arr[j] < arr[minIdx])
+                minIdx = j;
         }
-        // Swap if a smaller element was found
-        if (minIndex != i) {
-            swap(arr[i], arr[minIndex]);
-        }
+        if (minIdx != i)
+            swap(arr[i], arr[minIdx]);
     }
 }
 
+// ============================================================================
+// 6. STD::SORT (обёртка для единообразия вызова)
+// Использует интроспективную сортировку (гибрид Quick+Heap+Insertion)
+// ============================================================================
+template <typename T>
+void StdSort(vector<T>& arr)
+{
+    sort(arr.begin(), arr.end());
+}
+
+// ============================================================================
+// MAIN: тест всех 6 сортировок с замером времени
+// ============================================================================
 int main()
 {
-    const int N = 100000;  // размер массива
-    const int M = 10000;   // сколько раз ищем
+    const int N = 30000;
+    const int M = 10000;
 
-    // 1 задача: сортировка + линейный поиск
-    cout << "1 step: sorting + linear search" << endl;
+    cout << "=== Sorting Algorithms Benchmark ===" << endl << endl;
 
-    vector<int> sortedArray;
-    sortedArray.reserve(N);
+    // Вспомогательная лямбда для замера времени
+    auto measure = [](auto func) -> long long {
+        auto start = chrono::high_resolution_clock::now();
+        func();
+        auto stop = chrono::high_resolution_clock::now();
+        return chrono::duration_cast<chrono::milliseconds>(stop - start).count();
+    };
 
-    // создаём массив
-    auto start = chrono::high_resolution_clock::now();
-    for (int i = 0; i < N; i++)
+    // 1. Insertion Sort
+    cout << "1. Insertion Sort" << endl;
     {
-        sortedArray.push_back(GetRandomInt(0, 1000000));
+        vector<int> arr(N);
+        for (int& x : arr) x = GetRandomInt(0, 1000000);
+        long long t = measure([&]() { InsertionSort(arr); });
+        cout << "Sorting: " << t << " ms" << endl;
+        
+        int found = 0;
+        for (int i = 0; i < M; i++)
+            if (LinearSearch(arr, GetRandomInt(0, 1000000)) != -1) found++;
+        cout << "Linear search (" << M << " times): " << measure([&]() {
+            for (int i = 0; i < M; i++) LinearSearch(arr, GetRandomInt(0, 1000000));
+        }) << " ms" << endl;
+        cout << "Found: " << found << " elements" << endl << endl;
     }
 
-    auto stop = chrono::high_resolution_clock::now();
-    auto duration = chrono::duration_cast<chrono::milliseconds>(stop - start);
-    cout << "Creating massiv: " << duration.count() << " ms" << endl;
-
-
-    //место для вызова сортировки
-    cout << "STAGE 2: BUBBLE SORT + Binary search" << endl;
-    
+    // 2. Merge Sort
+    cout << "2. Merge Sort" << endl;
     {
-        vector<int> arr = copyArray(originalArray);
+        vector<int> arr(N);
+        for (int& x : arr) x = GetRandomInt(0, 1000000);
+        long long t = measure([&]() { MergeSort(arr); });
+        cout << "Sorting: " << t << " ms" << endl;
         
-        cout << "  Required operations: operator> for comparison, std::swap for exchange" << endl;
-        
-        // Sorting
-        measureTime([&]() { bubbleSort(arr); }, "Bubble Sort (sorting)");
-        
-        // Sorting check
-        cout << "  Array sorted: " << (isSorted(arr) ? "YES" : "NO") << endl;
-        
-        // Binary search
-        measureTime([&]() {
-            for (int target : searchTargets) {
-                binarySearch(arr, target);
-            }
-        }, "Binary search (after Bubble Sort)");
-        
-        // Search check
-        int testIndex = binarySearch(arr, searchTargets[0]);
-        cout << "  Check: element " << searchTargets[0] 
-                  << (testIndex != -1 ? " found" : " not found") << endl;
-    }
-    cout << "Sortirovka: " << duration.count() << " ms" << endl;
-    cout << endl;
-    
-   
-    cout << "STAGE 3: SELECTION SORT + Binary search" << endl;
-    
-    {
-        vector<int> arr = copyArray(originalArray);
-        
-        cout << "  Required operations: operator< for finding minimum, std::swap for exchange" << endl;
-        
-        // Sorting
-        measureTime([&]() { selectionSort(arr); }, "Selection Sort (sorting)");
-        
-        // Sorting check
-        cout << "  Array sorted: " << (isSorted(arr) ? "YES" : "NO") << endl;
-        
-        // Binary search
-        measureTime([&]() {
-            for (int target : searchTargets) {
-                binarySearch(arr, target);
-            }
-        }, "Binary search (after Selection Sort)");
-        
-        // Search check
-        int testIndex = binarySearch(arr, searchTargets[0]);
-        cout << "  Check: element " << searchTargets[0] 
-                  << (testIndex != -1 ? " found" : " not found") << endl;
-    }
-    cout << "Sortirovka: " << duration.count() << " ms" << endl;
-    cout << endl;
-
-    // бинарный поиск в отсортированном массиве (пункт 4)
-    vector<int> sortedArray;
-    sortedArray.reserve(N);
-    for (int i = 0; i < N; i++)
-        sortedArray.push_back(GetRandomInt(0, 1000000));
-
-    sort(sortedArray.begin(), sortedArray.end()); //предварительная сортировка массива
-
-    long long binaryTime = MeasureTimeMs([&]() {
-        for (int i = 0; i < M; i++) {
-            int val = GetRandomInt(0, 1000000);
-            BinarySearch(sortedArray, val);
-        }
-    });
-    cout << "Binary search: " << binaryTime << " ms" << endl;
-
-vector<int> baseArray;
-    baseArray.reserve(N);
-    for (int i = 0; i < N; i++)
-        baseArray.push_back(GetRandomInt(0, 1000000));
-
-/* Быстрая Сортировка QuickSort (пункт 3)
-    Операции, необходимые для сортировки:
-    1. Сравнение (operator< (arr[i] < pivot)) — определяет порядок элементов
-    2. Обмен (swap(arr[i], arr[j])) — перемещает элементы на нужные позиции
-    */
-    vector<int> arrQuick = baseArray;
-    long long timeQuick = MeasureTimeMs([&]() {
-        QuickSort(arrQuick, 0, static_cast<int>(arrQuick.size()) - 1);
-    });
-    results.push_back({"QuickSort", timeQuick});
-
-    // std::sort (пункт 5)
-    vector<int> arrStd = baseArray;
-    long long timeStd = MeasureTimeMs([&]() {
-        sort(arrStd.begin(), arrStd.end());
-    });
-    results.push_back({"std::sort", timeStd});
-
-    // Тест Insertion Sort
-    cout << "Insertion Sort:" << endl;
-    vector<int> arr1(N);
-    for (int& x : arr1) x = GetRandomInt(0, 1000000);
-    
-    auto start = chrono::high_resolution_clock::now();
-    InsertionSort(arr1);
-    auto stop = chrono::high_resolution_clock::now();
-    cout << "Sorted: " << chrono::duration_cast<chrono::milliseconds>(stop - start).count() << " ms" << endl;
-
-    // Тест Merge Sort
-    cout << "Merge Sort:" << endl;
-    vector<int> arr2(N);
-    for (int& x : arr2) x = GetRandomInt(0, 1000000);
-    
-    start = chrono::high_resolution_clock::now();
-    MergeSort(arr2);
-    stop = chrono::high_resolution_clock::now();
-    cout << "Sorted: " << chrono::duration_cast<chrono::milliseconds>(stop - start).count() << " ms" << endl;
-
-
-    // ищем элементы линейным поиском
-    start = chrono::high_resolution_clock::now();
-
-    int foundCount = 0;
-    for (int i = 0; i < M; i++)
-    {
-        int searchValue = GetRandomInt(0, 1000000);
-        int index = LinearSearch(sortedArray, searchValue);
-        if (index != -1)
-        {
-            foundCount++;
-        }
+        int found = 0;
+        for (int i = 0; i < M; i++)
+            if (LinearSearch(arr, GetRandomInt(0, 1000000)) != -1) found++;
+        cout << "Linear search (" << M << " times): " << measure([&]() {
+            for (int i = 0; i < M; i++) LinearSearch(arr, GetRandomInt(0, 1000000));
+        }) << " ms" << endl;
+        cout << "Found: " << found << " elements" << endl << endl;
     }
 
-    stop = chrono::high_resolution_clock::now();
-    duration = chrono::duration_cast<chrono::milliseconds>(stop - start);
-    cout << "Linear search (" << M << " times): " << duration.count() << " ms" << endl;
-    cout << "Found: " << foundCount << " elements" << endl;
+    // 3. Quick Sort
+    cout << "3. Quick Sort" << endl;
+    {
+        vector<int> arr(N);
+        for (int& x : arr) x = GetRandomInt(0, 1000000);
+        long long t = measure([&]() { QuickSort(arr, 0, (int)arr.size() - 1); });
+        cout << "Sorting: " << t << " ms" << endl;
+        
+        int found = 0;
+        for (int i = 0; i < M; i++)
+            if (LinearSearch(arr, GetRandomInt(0, 1000000)) != -1) found++;
+        cout << "Linear search (" << M << " times): " << measure([&]() {
+            for (int i = 0; i < M; i++) LinearSearch(arr, GetRandomInt(0, 1000000));
+        }) << " ms" << endl;
+        cout << "Found: " << found << " elements" << endl << endl;
+    }
+
+    // 4. Bubble Sort
+    cout << "4. Bubble Sort" << endl;
+    {
+        vector<int> arr(N);
+        for (int& x : arr) x = GetRandomInt(0, 1000000);
+        long long t = measure([&]() { BubbleSort(arr); });
+        cout << "Sorting: " << t << " ms" << endl;
+        
+        int found = 0;
+        for (int i = 0; i < M; i++)
+            if (LinearSearch(arr, GetRandomInt(0, 1000000)) != -1) found++;
+        cout << "Linear search (" << M << " times): " << measure([&]() {
+            for (int i = 0; i < M; i++) LinearSearch(arr, GetRandomInt(0, 1000000));
+        }) << " ms" << endl;
+        cout << "Found: " << found << " elements" << endl << endl;
+    }
+
+    // 5. Selection Sort
+    cout << "5. Selection Sort" << endl;
+    {
+        vector<int> arr(N);
+        for (int& x : arr) x = GetRandomInt(0, 1000000);
+        long long t = measure([&]() { SelectionSort(arr); });
+        cout << "Sorting: " << t << " ms" << endl;
+        
+        int found = 0;
+        for (int i = 0; i < M; i++)
+            if (LinearSearch(arr, GetRandomInt(0, 1000000)) != -1) found++;
+        cout << "Linear search (" << M << " times): " << measure([&]() {
+            for (int i = 0; i < M; i++) LinearSearch(arr, GetRandomInt(0, 1000000));
+        }) << " ms" << endl;
+        cout << "Found: " << found << " elements" << endl << endl;
+    }
+
+    // 6. std::sort (эталон)
+    cout << "6. std::sort (reference)" << endl;
+    {
+        vector<int> arr(N);
+        for (int& x : arr) x = GetRandomInt(0, 1000000);
+        long long t = measure([&]() { StdSort(arr); });
+        cout << "Sorting: " << t << " ms" << endl;
+        
+        int found = 0;
+        for (int i = 0; i < M; i++)
+            if (LinearSearch(arr, GetRandomInt(0, 1000000)) != -1) found++;
+        cout << "Linear search (" << M << " times): " << measure([&]() {
+            for (int i = 0; i < M; i++) LinearSearch(arr, GetRandomInt(0, 1000000));
+        }) << " ms" << endl;
+        cout << "Found: " << found << " elements" << endl;
+    }
 
     return 0;
 }
