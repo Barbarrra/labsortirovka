@@ -202,8 +202,121 @@ int main()
 
 
     //место для вызова сортировки
-
+    cout << "STAGE 2: BUBBLE SORT + Binary search" << endl;
+    
+    {
+        vector<int> arr = copyArray(originalArray);
+        
+        cout << "  Required operations: operator> for comparison, std::swap for exchange" << endl;
+        
+        // Sorting
+        measureTime([&]() { bubbleSort(arr); }, "Bubble Sort (sorting)");
+        
+        // Sorting check
+        cout << "  Array sorted: " << (isSorted(arr) ? "YES" : "NO") << endl;
+        
+        // Binary search
+        measureTime([&]() {
+            for (int target : searchTargets) {
+                binarySearch(arr, target);
+            }
+        }, "Binary search (after Bubble Sort)");
+        
+        // Search check
+        int testIndex = binarySearch(arr, searchTargets[0]);
+        cout << "  Check: element " << searchTargets[0] 
+                  << (testIndex != -1 ? " found" : " not found") << endl;
+    }
     cout << "Sortirovka: " << duration.count() << " ms" << endl;
+    cout << endl;
+    
+   
+    cout << "STAGE 3: SELECTION SORT + Binary search" << endl;
+    
+    {
+        vector<int> arr = copyArray(originalArray);
+        
+        cout << "  Required operations: operator< for finding minimum, std::swap for exchange" << endl;
+        
+        // Sorting
+        measureTime([&]() { selectionSort(arr); }, "Selection Sort (sorting)");
+        
+        // Sorting check
+        cout << "  Array sorted: " << (isSorted(arr) ? "YES" : "NO") << endl;
+        
+        // Binary search
+        measureTime([&]() {
+            for (int target : searchTargets) {
+                binarySearch(arr, target);
+            }
+        }, "Binary search (after Selection Sort)");
+        
+        // Search check
+        int testIndex = binarySearch(arr, searchTargets[0]);
+        cout << "  Check: element " << searchTargets[0] 
+                  << (testIndex != -1 ? " found" : " not found") << endl;
+    }
+    cout << "Sortirovka: " << duration.count() << " ms" << endl;
+    cout << endl;
+
+    // бинарный поиск в отсортированном массиве (пункт 4)
+    vector<int> sortedArray;
+    sortedArray.reserve(N);
+    for (int i = 0; i < N; i++)
+        sortedArray.push_back(GetRandomInt(0, 1000000));
+
+    sort(sortedArray.begin(), sortedArray.end()); //предварительная сортировка массива
+
+    long long binaryTime = MeasureTimeMs([&]() {
+        for (int i = 0; i < M; i++) {
+            int val = GetRandomInt(0, 1000000);
+            BinarySearch(sortedArray, val);
+        }
+    });
+    cout << "Binary search: " << binaryTime << " ms" << endl;
+
+vector<int> baseArray;
+    baseArray.reserve(N);
+    for (int i = 0; i < N; i++)
+        baseArray.push_back(GetRandomInt(0, 1000000));
+
+/* Быстрая Сортировка QuickSort (пункт 3)
+    Операции, необходимые для сортировки:
+    1. Сравнение (operator< (arr[i] < pivot)) — определяет порядок элементов
+    2. Обмен (swap(arr[i], arr[j])) — перемещает элементы на нужные позиции
+    */
+    vector<int> arrQuick = baseArray;
+    long long timeQuick = MeasureTimeMs([&]() {
+        QuickSort(arrQuick, 0, static_cast<int>(arrQuick.size()) - 1);
+    });
+    results.push_back({"QuickSort", timeQuick});
+
+    // std::sort (пункт 5)
+    vector<int> arrStd = baseArray;
+    long long timeStd = MeasureTimeMs([&]() {
+        sort(arrStd.begin(), arrStd.end());
+    });
+    results.push_back({"std::sort", timeStd});
+
+    // Тест Insertion Sort
+    cout << "Insertion Sort:" << endl;
+    vector<int> arr1(N);
+    for (int& x : arr1) x = GetRandomInt(0, 1000000);
+    
+    auto start = chrono::high_resolution_clock::now();
+    InsertionSort(arr1);
+    auto stop = chrono::high_resolution_clock::now();
+    cout << "Sorted: " << chrono::duration_cast<chrono::milliseconds>(stop - start).count() << " ms" << endl;
+
+    // Тест Merge Sort
+    cout << "Merge Sort:" << endl;
+    vector<int> arr2(N);
+    for (int& x : arr2) x = GetRandomInt(0, 1000000);
+    
+    start = chrono::high_resolution_clock::now();
+    MergeSort(arr2);
+    stop = chrono::high_resolution_clock::now();
+    cout << "Sorted: " << chrono::duration_cast<chrono::milliseconds>(stop - start).count() << " ms" << endl;
 
 
     // ищем элементы линейным поиском
